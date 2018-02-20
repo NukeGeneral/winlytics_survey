@@ -1,9 +1,11 @@
 package winlytics.io.survey;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import org.json.JSONException;
@@ -59,18 +61,40 @@ public class Winlytics implements WinlyticsBuilder{
             winlytics = new Winlytics();
         }
         else{
-            //Do nothing
+            if(isLocked.get()){
+                throw new WinlyticsException("Winlytics should be called once per instance");
+            }
+            else{
+                if(survey != null){
+
+                }
+                else{
+                    winlytics.getSurvey();
+                }
+            }
         }
         return winlytics;
     }
 
-    @Override public WinlyticsBuilder withGeneratedUI(boolean generateUI){
-        if(generateUI){
+    /**
+     *
+     * @param context Should be non-null if requested with Default UI
+     * @param generateUI Should passed as true if requested Default UI,else false
+     * @return
+     */
 
+    @Override public WinlyticsBuilder withGeneratedUI(@Nullable Context context, boolean generateUI){
+        if(generateUI){
+            new WinlyticsAdapter(context);
         }
         return this;
     }
 
+    /**
+     *
+     * @param withOption Should passed as true if developer wants to make some modifications on Default UI
+     * @return
+     */
     @Override public WinlyticsBuilder withModificationOption(boolean withOption){
         if(withOption){
 
@@ -171,9 +195,8 @@ public class Winlytics implements WinlyticsBuilder{
                 }
                 JSONObject contacts = jsonObj.getJSONObject("debug");
                 survey.setTemp(contacts.getString("warnings"));
-                // adding contact to contact list
             } catch (JSONException e) {
-                e.printStackTrace();
+                winlytics.setConnectionStatus(WinlyticsError.MALFORMED_RESPONSE);
             }
             mutex.release();
             isLocked.set(false);

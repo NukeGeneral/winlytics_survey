@@ -1,5 +1,7 @@
 package winlytics.io.survey;
 
+import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 /**
@@ -9,7 +11,7 @@ import android.support.annotation.RequiresApi;
 public interface WinlyticsBuilder {
 
     @RequiresApi(api = 19)
-    WinlyticsBuilder withGeneratedUI(boolean generateUI);
+    WinlyticsBuilder withGeneratedUI(@Nullable Context context, boolean generateUI);
 
     @RequiresApi(api = 19)
     WinlyticsBuilder withModificationOption(boolean ableToChange);
