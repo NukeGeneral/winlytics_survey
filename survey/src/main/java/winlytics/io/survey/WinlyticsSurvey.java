@@ -38,7 +38,7 @@ class WinlyticsSurvey {
         this.surveyId = surveyId;
     }
 
-    public boolean resetSurvey(){
+    boolean resetSurvey(){
         try{
             userId = 0;
             surveyId = 0;

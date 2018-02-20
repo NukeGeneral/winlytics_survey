@@ -1,7 +1,7 @@
 package winlytics.io.survey;
 
 /**
- * Created by umur on 2/20/18.
+ * Created by Umur Kaya on 2/20/18.
  */
 
 class WinlyticsException extends IllegalStateException {

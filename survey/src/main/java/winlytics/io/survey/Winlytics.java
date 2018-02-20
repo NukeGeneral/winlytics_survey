@@ -25,7 +25,7 @@ import java.util.concurrent.Semaphore;
  * Created by Umur Kaya on 2/19/18.
  */
 
-public class Winlytics {
+public class Winlytics implements WinlyticsBuilder{
     private static String WINLYTICS_URL = "http://www.heydate.com/api/v4/references/google_play?winlytics_test_id=";
     private static Winlytics winlytics;
     private static WinlyticsSurvey survey = new WinlyticsSurvey();
@@ -55,7 +55,7 @@ public class Winlytics {
     }
 
     @RequiresPermission(android.Manifest.permission.INTERNET)
-    public static void createSurvey(@NonNull String authToken){
+    public static WinlyticsBuilder createSurvey(@NonNull String authToken){
         AUTH_TOKEN = authToken;
         if(winlytics == null){
             winlytics = new Winlytics();
@@ -63,6 +63,21 @@ public class Winlytics {
         else{
             //Do nothing
         }
+        return winlytics;
+    }
+
+    @Override public WinlyticsBuilder withGeneratedUI(boolean generateUI){
+        if(generateUI){
+
+        }
+        return this;
+    }
+
+    @Override public WinlyticsBuilder withModificationOption(boolean withOption){
+        if(withOption){
+
+        }
+        return this;
     }
 
     private void setConnectionStatus(int connectionStatus){
@@ -93,12 +108,8 @@ public class Winlytics {
         }
     }
 
-    private static WinlyticsSurvey getSavedSurvey(){
-        return new WinlyticsSurvey();
-    }
-
     private void getSurvey() {
-        response = null;
+        winlytics.response = null;
         try {
             URL url = new URL(WINLYTICS_URL+AUTH_TOKEN);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -120,7 +131,7 @@ public class Winlytics {
             setConnectionStatus(WinlyticsResponse.UNKNOWN_ERROR);
         }
     }
-    @NonNull
+
     private void convertStreamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
@@ -139,7 +150,7 @@ public class Winlytics {
                 e.printStackTrace();
             }
         }
-        winlytics.response =  sb.toString();
+        winlytics.response = sb.toString();
     }
 
     /**
@@ -156,7 +167,9 @@ public class Winlytics {
                     survey = new WinlyticsSurvey();
                 }
                 else{
-                    survey.resetSurvey();
+                    if(!survey.resetSurvey()){
+                        survey = new WinlyticsSurvey();
+                    }
                 }
                 JSONObject contacts = jsonObj.getJSONObject("debug");
                 survey.setTemp(contacts.getString("warnings"));
