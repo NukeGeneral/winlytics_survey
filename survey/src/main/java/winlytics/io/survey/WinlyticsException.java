@@ -6,7 +6,7 @@ package winlytics.io.survey;
 
 class WinlyticsException extends IllegalStateException {
 
-    WinlyticsException(String detailMessage){
+    WinlyticsException(String detailMessage) throws IllegalStateException{
         super(detailMessage);
     }
 }

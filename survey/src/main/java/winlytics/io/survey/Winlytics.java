@@ -20,6 +20,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Umur Kaya on 2/19/18.
@@ -30,27 +31,24 @@ public class Winlytics implements WinlyticsBuilder{
     private static Winlytics winlytics;
     private static WinlyticsSurvey survey = new WinlyticsSurvey();
     private final static Semaphore mutex = new Semaphore(1,true);
+    private static AtomicBoolean isLocked = new AtomicBoolean(false);
     private static String AUTH_TOKEN = "";
     private String response;
 
-    private interface WinlyticsResponse {
-        int OK = 0;
-        int SERVICE_UNAVAILABLE = 1;
-        int MALFORMED_RESPONSE = 2;
-        int PROTOCOL_ERROR = 3;
-        int SETUP_ERROR = 4;
-        int UNKNOWN_ERROR = -1;
-    }
-
     private Winlytics(){
         try{
-            synchronized (mutex){
-                mutex.acquire();
-                new SetWinlyticsSurvey().execute();
+            if(!isLocked.getAndSet(true)){
+                synchronized (mutex){
+                    mutex.acquire();
+                    new SetWinlyticsSurvey().execute();
+                }
+            }
+            else{
+                throw new WinlyticsException("Winlytics should be called once per instance");
             }
         }catch (InterruptedException e){
             //Prevent multiple execution
-            throw new WinlyticsException("Illegal execution,already started Winlytics instance");
+            throw new WinlyticsException("Illegal call for Winlytics Builder");
         }
     }
 
@@ -80,15 +78,15 @@ public class Winlytics implements WinlyticsBuilder{
         return this;
     }
 
-    private void setConnectionStatus(int connectionStatus){
-        switch (connectionStatus){
-            case WinlyticsResponse.OK:
+    private void setConnectionStatus(WinlyticsError error){
+        switch (error){
+            case OK:
                 //Initialize Adapter
                 break;
-            case WinlyticsResponse.UNKNOWN_ERROR:
+            case UNKNOWN_ERROR:
                 //Report StackTrace to API
                 break;
-            case WinlyticsResponse.SERVICE_UNAVAILABLE:
+            case SERVICE_UNAVAILABLE:
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -96,13 +94,13 @@ public class Winlytics implements WinlyticsBuilder{
                     }
                 },2000);
                 break;
-            case WinlyticsResponse.MALFORMED_RESPONSE:
+            case MALFORMED_RESPONSE:
                 //Try again
                 break;
-            case WinlyticsResponse.PROTOCOL_ERROR:
+            case PROTOCOL_ERROR:
                 //Open an issue
                 break;
-            case WinlyticsResponse.SETUP_ERROR:
+            case SETUP_ERROR:
                 //Check credentials
                 break;
         }
@@ -119,16 +117,16 @@ public class Winlytics implements WinlyticsBuilder{
             conn.setRequestProperty("User-Agent","OkHttp Winlytics");
             conn.setRequestProperty("Accept-Language", Locale.getDefault().getLanguage());
             InputStream in = new BufferedInputStream(conn.getInputStream());
-            setConnectionStatus(WinlyticsResponse.OK);
+            setConnectionStatus(WinlyticsError.OK);
             convertStreamToString(in);
         } catch (MalformedURLException e) {
-            setConnectionStatus(WinlyticsResponse.MALFORMED_RESPONSE);
+            setConnectionStatus(WinlyticsError.MALFORMED_RESPONSE);
         } catch (ProtocolException e) {
-            setConnectionStatus(WinlyticsResponse.PROTOCOL_ERROR);
+            setConnectionStatus(WinlyticsError.PROTOCOL_ERROR);
         } catch (IOException e) {
-            setConnectionStatus(WinlyticsResponse.SERVICE_UNAVAILABLE);
+            setConnectionStatus(WinlyticsError.SERVICE_UNAVAILABLE);
         } catch (Exception e) {
-            setConnectionStatus(WinlyticsResponse.UNKNOWN_ERROR);
+            setConnectionStatus(WinlyticsError.UNKNOWN_ERROR);
         }
     }
 
@@ -178,6 +176,7 @@ public class Winlytics implements WinlyticsBuilder{
                 e.printStackTrace();
             }
             mutex.release();
+            isLocked.set(false);
             return null;
         }
     }
