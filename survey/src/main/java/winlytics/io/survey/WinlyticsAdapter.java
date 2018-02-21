@@ -134,6 +134,10 @@ class WinlyticsAdapter extends Dialog{
         dialog.show();
     }
 
+    public void setImage(String url){
+        new DownloadImageTask().execute(url);
+    }
+
     public void setBrandColor(int color){
 
     }

@@ -76,7 +76,15 @@ public class Winlytics implements WinlyticsBuilder{
 
     @Override public WinlyticsBuilder withGeneratedUI(@Nullable Context context, boolean generateUI){
         if(generateUI){
-            mLayout = new WinlyticsAdapter(context);
+            if(context != null){
+                mLayout = new WinlyticsAdapter(context);
+            }
+            else{
+                throw new WinlyticsException("Context cannot be null if requested default UI");
+            }
+        }
+        else{
+
         }
         return this;
     }
