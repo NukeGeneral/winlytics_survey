@@ -34,6 +34,7 @@ public class Winlytics implements WinlyticsBuilder{
     private static AtomicBoolean mutex = new AtomicBoolean(false);
     private static String AUTH_TOKEN = "";
     private String response;
+    private WinlyticsAdapter mLayout;
 
     private Winlytics(){
         if(!mutex.getAndSet(true)){
@@ -75,7 +76,7 @@ public class Winlytics implements WinlyticsBuilder{
 
     @Override public WinlyticsBuilder withGeneratedUI(@Nullable Context context, boolean generateUI){
         if(generateUI){
-            new WinlyticsAdapter(context,null);
+            mLayout = new WinlyticsAdapter(context);
         }
         return this;
     }
