@@ -21,7 +21,6 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Locale;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -32,25 +31,16 @@ public class Winlytics implements WinlyticsBuilder{
     private static String WINLYTICS_URL = "http://www.heydate.com/api/v4/references/google_play?winlytics_test_id=";
     private static Winlytics winlytics;
     private static WinlyticsSurvey survey = new WinlyticsSurvey();
-    private final static Semaphore mutex = new Semaphore(1,true);
-    private static AtomicBoolean isLocked = new AtomicBoolean(false);
+    private static AtomicBoolean mutex = new AtomicBoolean(false);
     private static String AUTH_TOKEN = "";
     private String response;
 
     private Winlytics(){
-        try{
-            if(!isLocked.getAndSet(true)){
-                synchronized (mutex){
-                    mutex.acquire();
-                    new SetWinlyticsSurvey().execute();
-                }
-            }
-            else{
-                throw new WinlyticsException("Winlytics should be called once per instance");
-            }
-        }catch (InterruptedException e){
-            //Prevent multiple execution
-            throw new WinlyticsException("Illegal call for Winlytics Builder");
+        if(!mutex.getAndSet(true)){
+            new SetWinlyticsSurvey().execute();
+        }
+        else{
+            throw new WinlyticsException("Winlytics should be called once per instance");
         }
     }
 
@@ -61,7 +51,7 @@ public class Winlytics implements WinlyticsBuilder{
             winlytics = new Winlytics();
         }
         else{
-            if(isLocked.get()){
+            if(mutex.get()){
                 throw new WinlyticsException("Winlytics should be called once per instance");
             }
             else{
@@ -85,7 +75,7 @@ public class Winlytics implements WinlyticsBuilder{
 
     @Override public WinlyticsBuilder withGeneratedUI(@Nullable Context context, boolean generateUI){
         if(generateUI){
-            new WinlyticsAdapter(context);
+            new WinlyticsAdapter(context,null);
         }
         return this;
     }
@@ -198,8 +188,7 @@ public class Winlytics implements WinlyticsBuilder{
             } catch (JSONException e) {
                 winlytics.setConnectionStatus(WinlyticsError.MALFORMED_RESPONSE);
             }
-            mutex.release();
-            isLocked.set(false);
+            mutex.set(false);
             return null;
         }
     }
