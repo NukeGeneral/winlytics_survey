@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import org.json.JSONException;
@@ -56,11 +55,8 @@ public class Winlytics implements WinlyticsBuilder{
                 throw new WinlyticsException("Winlytics should be called once per instance");
             }
             else{
-                if(survey != null){
-
-                }
-                else{
-                    winlytics.getSurvey();
+                if(survey == null){
+                    winlytics.loadSurvey();
                 }
             }
         }
@@ -70,35 +66,25 @@ public class Winlytics implements WinlyticsBuilder{
     /**
      *
      * @param context Should be non-null if requested with Default UI
-     * @param generateUI Should passed as true if requested Default UI,else false
+     * @param isAbleToModify Should passed as true if requested to modify Default UI,else false
      * @return
      */
 
-    @Override public WinlyticsBuilder withGeneratedUI(@Nullable Context context, boolean generateUI){
-        if(generateUI){
-            if(context != null){
-                mLayout = new WinlyticsAdapter(context);
-            }
-            else{
-                throw new WinlyticsException("Context cannot be null if requested default UI");
-            }
-        }
-        else{
-
-        }
-        return this;
+    @Override public WinlyticsBuilder withGeneratedUI(@NonNull Context context, boolean isAbleToModify){
+        mLayout = new WinlyticsAdapter(context,isAbleToModify);
+        return winlytics;
     }
 
-    /**
-     *
-     * @param withOption Should passed as true if developer wants to make some modifications on Default UI
-     * @return
-     */
-    @Override public WinlyticsBuilder withModificationOption(boolean withOption){
-        if(withOption){
+    public WinlyticsAdapter getLayout(){
+        return mLayout;
+    }
 
-        }
-        return this;
+    public static Winlytics getWinlytics(){
+        return winlytics;
+    }
+
+    public WinlyticsSurvey getSurvey(){
+        return survey;
     }
 
     private void setConnectionStatus(WinlyticsError error){
@@ -129,7 +115,7 @@ public class Winlytics implements WinlyticsBuilder{
         }
     }
 
-    private void getSurvey() {
+    private void loadSurvey() {
         winlytics.response = null;
         try {
             URL url = new URL(WINLYTICS_URL+AUTH_TOKEN);
@@ -180,7 +166,7 @@ public class Winlytics implements WinlyticsBuilder{
     private static class SetWinlyticsSurvey extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... arg0) {
-            winlytics.getSurvey();
+            winlytics.loadSurvey();
             try {
                 JSONObject jsonObj = new JSONObject(winlytics.response);
                 // Example Json Parsing

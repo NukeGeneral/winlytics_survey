@@ -31,9 +31,11 @@ class WinlyticsAdapter extends Dialog{
     private final ImageView winlytics_customer_logo;
     private final ScrollView winlytics_scroll;
     private String resultNumber;
+    private final boolean isAbleToModify;
 
-    WinlyticsAdapter(final Context context){
+    WinlyticsAdapter(final Context context,boolean isAbleToModify){
         super(context);
+        this.isAbleToModify = isAbleToModify;
         final Dialog dialog = new Dialog(context,R.style.DialogTheme);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.getWindow().setContentView(R.layout.winlytics_default);
@@ -130,8 +132,6 @@ class WinlyticsAdapter extends Dialog{
                 dialog.dismiss();
             }
         });
-
-        dialog.show();
     }
 
     public void setImage(String url){
@@ -139,27 +139,39 @@ class WinlyticsAdapter extends Dialog{
     }
 
     public void setBrandColor(int color){
+        if(isAbleToModify){
 
+        }
     }
 
     public void setSelectedButtonColor(int color){
+        if(isAbleToModify){
 
+        }
     }
 
     public void setSubmitButtonText(String text){
-        winlytics_submit.setText(text);
+        if(isAbleToModify){
+            winlytics_submit.setText(text);
+        }
     }
 
     public void setBrandName(String text){
-        title.setText(text);
+        if(isAbleToModify){
+            title.setText(text);
+        }
     }
 
     public void setOptionalTextAreaText(String text){
-        winlytics_optional_text_title_area.setText(text);
+        if(isAbleToModify){
+            winlytics_optional_text_title_area.setText(text);
+        }
     }
 
     public void setButtonAnswerWelcomingText(String text){
-        winlytics_welcoming_text.setText(text);
+        if(isAbleToModify){
+            winlytics_welcoming_text.setText(text);
+        }
     }
 
     private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
