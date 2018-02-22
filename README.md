@@ -1,9 +1,5 @@
 # Winlytics Android Gradle Library
 
-
-# Usage
-
-
 ## How to install this library
 
 Add this snippet to your project level gradle:
