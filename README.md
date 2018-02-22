@@ -23,7 +23,7 @@ And to your AndroidManifest.xml file:
 
 ## How to use this library
 
-Just call in your activity or fragment,it will show a Dialog easily
+Just call in your activity or fragment,it will show a Dialog easily.
 Context can be Activity or Fragment context
 ```javascript
   Winlytics.createSurvey("replace your survey id here"),context);
