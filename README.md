@@ -14,7 +14,7 @@ Add this snippet to your project level gradle:
 
 And this line to your app level gradle:
 ```javascript
-  implementation 'com.io.winlytics:1.0.0'
+  implementation 'io.winlytics.survey:1.0.0'
 ```
 And to your AndroidManifest.xml file:
 ```javascript
