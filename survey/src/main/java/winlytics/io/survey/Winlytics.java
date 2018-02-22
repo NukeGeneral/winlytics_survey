@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import org.json.JSONException;
@@ -26,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by Umur Kaya on 2/19/18.
  */
 
-public class Winlytics implements WinlyticsBuilder{
+public class Winlytics{
     private static String WINLYTICS_URL = "http://www.heydate.com/api/v4/references/google_play?winlytics_test_id=";
     private static Winlytics winlytics;
     private static WinlyticsSurvey survey = new WinlyticsSurvey();
@@ -34,6 +35,7 @@ public class Winlytics implements WinlyticsBuilder{
     private static String AUTH_TOKEN = "";
     private String response;
     private WinlyticsAdapter mLayout;
+    private boolean UIReady = false;
 
     private Winlytics(){
         if(!mutex.getAndSet(true)){
@@ -45,7 +47,12 @@ public class Winlytics implements WinlyticsBuilder{
     }
 
     @RequiresPermission(android.Manifest.permission.INTERNET)
-    public static WinlyticsBuilder createSurvey(@NonNull String authToken){
+    /**
+     * @param authToken This is a token which provided to you from winlytics.io dashboard
+     * @param context Must be non-null if requested with Default UI,it can be Activity or Fragment Context
+     * @return Winlytics instance object
+     */
+    public static Winlytics createSurvey(@NonNull String authToken,@NonNull Context context){
         AUTH_TOKEN = authToken;
         if(winlytics == null){
             winlytics = new Winlytics();
@@ -60,37 +67,33 @@ public class Winlytics implements WinlyticsBuilder{
                 }
             }
         }
+        if(winlytics.mLayout == null){
+            winlytics.mLayout = new WinlyticsAdapter(new WinlyticsAdapter.WinlyticsAdapterNotifier() {
+                @Override
+                public void notifyAdapterIsReady() {
+                    winlytics.UIReady = true;
+                    winlytics.setSurveyItems();
+                }
+            },context);
+        }
         return winlytics;
     }
 
-    /**
-     *
-     * @param context Should be non-null if requested with Default UI
-     * @param isAbleToModify Should passed as true if requested to modify Default UI,else false
-     * @return
-     */
-
-    @Override public WinlyticsBuilder withGeneratedUI(@NonNull Context context, boolean isAbleToModify){
-        mLayout = new WinlyticsAdapter(context,isAbleToModify);
-        return winlytics;
-    }
-
-    public WinlyticsAdapter getLayout(){
-        return mLayout;
-    }
-
-    public static Winlytics getWinlytics(){
-        return winlytics;
-    }
-
-    public WinlyticsSurvey getSurvey(){
-        return survey;
+    private void setSurveyItems(){
+        if(UIReady && !mutex.get()){
+            mLayout.setOptionalTextAreaText(survey.getTemp());
+            mLayout.setBrandName(survey.getBrandName());
+            mLayout.setSubmitButtonText("Submit");
+            mLayout.setImage(survey.getImageUrl());
+            mLayout.setBrandColor(0xFF48A9D7);
+            mLayout.setButtonAnswerWelcomingText("sdadsdsa dsadsad sadasasdasdsadsad dasdsadas");
+            mLayout.dialog.show();
+        }
     }
 
     private void setConnectionStatus(WinlyticsError error){
         switch (error){
             case OK:
-                //Initialize Adapter
                 break;
             case UNKNOWN_ERROR:
                 //Report StackTrace to API
@@ -104,14 +107,18 @@ public class Winlytics implements WinlyticsBuilder{
                 },2000);
                 break;
             case MALFORMED_RESPONSE:
-                //Try again
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        new SetWinlyticsSurvey().execute();
+                    }
+                },2000);
                 break;
             case PROTOCOL_ERROR:
                 //Open an issue
                 break;
             case SETUP_ERROR:
-                //Check credentials
-                break;
+                throw new WinlyticsException("Authenication failed,information which passed is wrong");
         }
     }
 
@@ -142,7 +149,7 @@ public class Winlytics implements WinlyticsBuilder{
     private void convertStreamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
-        SystemClock.sleep(500);
+        SystemClock.sleep(100);
         String line;
         try {
             while ((line = reader.readLine()) != null) {
@@ -154,7 +161,7 @@ public class Winlytics implements WinlyticsBuilder{
             try {
                 is.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                setConnectionStatus(WinlyticsError.UNKNOWN_ERROR);
             }
         }
         winlytics.response = sb.toString();
@@ -180,11 +187,18 @@ public class Winlytics implements WinlyticsBuilder{
                 }
                 JSONObject contacts = jsonObj.getJSONObject("debug");
                 survey.setTemp(contacts.getString("warnings"));
+                survey.setImageUrl("https://www.logodesignlove.com/images/classic/apple-logo-rob-janoff-01.jpg");
+                survey.setBrandName("How likely are you recommend Apple to your friends?");
             } catch (JSONException e) {
                 winlytics.setConnectionStatus(WinlyticsError.MALFORMED_RESPONSE);
             }
             mutex.set(false);
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            winlytics.setSurveyItems();
         }
     }
 }

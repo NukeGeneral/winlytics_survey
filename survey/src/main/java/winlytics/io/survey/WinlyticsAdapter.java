@@ -4,12 +4,18 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -29,20 +35,25 @@ class WinlyticsAdapter extends Dialog{
     private final LinearLayout winlytics_optional_text_area;
     private final EditText winlytics_optional_edit_text_area;
     private final ImageView winlytics_customer_logo;
+    private final ImageButton winlytics_cancel_action;
     private final ScrollView winlytics_scroll;
     private String resultNumber;
-    private final boolean isAbleToModify;
+    private Context context;
+    Dialog dialog;
 
-    WinlyticsAdapter(final Context context,boolean isAbleToModify){
+    interface WinlyticsAdapterNotifier{
+        void notifyAdapterIsReady();
+    }
+
+    WinlyticsAdapter(WinlyticsAdapterNotifier mListener,final Context context){
         super(context);
-        this.isAbleToModify = isAbleToModify;
-        final Dialog dialog = new Dialog(context,R.style.DialogTheme);
+        dialog = new Dialog(context,R.style.DialogTheme);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.getWindow().setContentView(R.layout.winlytics_default);
-
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
+        this.context = context;
         //Dialog setup
         winlytics_customer_logo = (ImageView) dialog.findViewById(R.id.winlytics_customer_logo);
-        new DownloadImageTask().execute("https://www.logodesignlove.com/images/classic/apple-logo-rob-janoff-01.jpg");
         title = (TextView) dialog.findViewById(R.id.winlytics_text_1);
         button0 = (Button) dialog.findViewById(R.id.winlytics_button_0);
         button1 = (Button) dialog.findViewById(R.id.winlytics_button_1);
@@ -61,6 +72,7 @@ class WinlyticsAdapter extends Dialog{
         winlytics_welcoming_text = (TextView) dialog.findViewById(R.id.winlytics_welcoming_text);
         winlytics_submit = (Button) dialog.findViewById(R.id.winlytics_submit);
         winlytics_scroll = (ScrollView) dialog.findViewById(R.id.winlytics_scroll);
+        winlytics_cancel_action = (ImageButton) dialog.findViewById(R.id.winlytics_cancel_action);
 
         //Set Button UnHappy Listener
 
@@ -77,7 +89,9 @@ class WinlyticsAdapter extends Dialog{
                 v.post(new Runnable() {
                     @Override
                     public void run() {
-                        winlytics_scroll.smoothScrollTo(0,winlytics_submit.getBottom());
+                        if(winlytics_scroll.canScrollVertically(1)){
+                            winlytics_scroll.smoothScrollTo(0,winlytics_scroll.getBottom());
+                        }
                     }
                 });
                 referenceHolder.setBackgroundResource(R.drawable.rounded_button_background_gray_withborder);
@@ -101,7 +115,9 @@ class WinlyticsAdapter extends Dialog{
                 v.post(new Runnable() {
                     @Override
                     public void run() {
-                        winlytics_scroll.smoothScrollTo(0,winlytics_submit.getBottom());
+                        if(winlytics_scroll.canScrollVertically(1)){
+                            winlytics_scroll.smoothScrollTo(0,winlytics_scroll.getBottom());
+                        }
                     }
                 });
                 referenceHolder.setBackgroundResource(R.drawable.rounded_button_background_gray_withborder);
@@ -132,46 +148,50 @@ class WinlyticsAdapter extends Dialog{
                 dialog.dismiss();
             }
         });
+        winlytics_cancel_action.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        mListener.notifyAdapterIsReady();
     }
 
-    public void setImage(String url){
+    void setImage(String url){
         new DownloadImageTask().execute(url);
     }
 
-    public void setBrandColor(int color){
-        if(isAbleToModify){
-
-        }
+    void setBrandColor(int color){
+        title.setTextColor(color);
     }
 
-    public void setSelectedButtonColor(int color){
-        if(isAbleToModify){
-
-        }
+    void setSelectedButtonColor(int color){
+        GradientDrawable temp = (GradientDrawable)context.getResources().getDrawable(R.drawable.rounded_button_background_gray_withborder);
+        temp.setColor(color);
     }
 
-    public void setSubmitButtonText(String text){
-        if(isAbleToModify){
-            winlytics_submit.setText(text);
-        }
+    void setSubmitButtonTextColor(int color){
+        winlytics_submit.setTextColor(color);
     }
 
-    public void setBrandName(String text){
-        if(isAbleToModify){
-            title.setText(text);
-        }
+    void setSubmitButtonColor(int color){
+        winlytics_submit.setBackgroundColor(color);
     }
 
-    public void setOptionalTextAreaText(String text){
-        if(isAbleToModify){
-            winlytics_optional_text_title_area.setText(text);
-        }
+    void setSubmitButtonText(String text){
+        winlytics_submit.setText(text);
     }
 
-    public void setButtonAnswerWelcomingText(String text){
-        if(isAbleToModify){
-            winlytics_welcoming_text.setText(text);
-        }
+    void setBrandName(String text){
+        title.setText(text);
+    }
+
+    void setOptionalTextAreaText(String text){
+        winlytics_optional_text_title_area.setText(text);
+    }
+
+    void setButtonAnswerWelcomingText(String text){
+        winlytics_welcoming_text.setText(text);
     }
 
     private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {

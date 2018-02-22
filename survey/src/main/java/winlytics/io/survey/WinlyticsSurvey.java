@@ -5,37 +5,41 @@ package winlytics.io.survey;
  * Created by Umur Kaya on 2/19/18.
  */
 
-class WinlyticsSurvey {
+public class WinlyticsSurvey {
     /**
      * Generating Winlytics Survey from API
      */
     private int userId;
     private int surveyId;
-
-    public String getTemp() {
-        return temp;
-    }
-
-    public void setTemp(String temp) {
-        this.temp = temp;
-    }
-
+    private String imageUrl;
     private String temp;
 
-    public int getUserId() {
+    String getBrandName() {return brandName;}
+    void setBrandName(String brandName) {this.brandName = brandName;}
+    private String brandName;
+    String getTemp() {
+        return temp;
+    }
+    void setTemp(String temp) {
+        this.temp = temp;
+    }
+    int getUserId() {
         return userId;
     }
-
-    public void setUserId(int userId) {
+    void setUserId(int userId) {
         this.userId = userId;
     }
-
-    public int getSurveyId() {
+    int getSurveyId() {
         return surveyId;
     }
-
-    public void setSurveyId(int surveyId) {
+    void setSurveyId(int surveyId) {
         this.surveyId = surveyId;
+    }
+    String getImageUrl() {
+        return imageUrl;
+    }
+    void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     boolean resetSurvey(){
@@ -43,6 +47,7 @@ class WinlyticsSurvey {
             userId = 0;
             surveyId = 0;
             temp = null;
+            imageUrl = null;
             return true;
         }catch (Exception e){
             return false;
