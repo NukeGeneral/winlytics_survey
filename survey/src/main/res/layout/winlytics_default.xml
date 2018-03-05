@@ -8,26 +8,14 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_height="wrap_content">
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="60dp">
-            <ImageView
-                android:layout_width="match_parent"
-                android:scaleType="centerInside"
-                android:paddingStart="50dp"
-                android:layout_toStartOf="@+id/winlytics_cancel_action"
-                android:layout_alignParentStart="true"
-                android:id="@+id/winlytics_customer_logo"
-                android:layout_height="match_parent" />
-            <ImageButton
-                android:layout_width="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="10dp"
-                android:id="@+id/winlytics_cancel_action"
-                style="@style/Widget.AppCompat.Button.Borderless"
-                android:src="@drawable/winlytics_cancel_button"
-                android:layout_height="match_parent" />
-        </RelativeLayout>
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="10dp"
+            android:id="@+id/winlytics_cancel_action"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:src="@drawable/winlytics_cancel_button"
+            android:layout_height="match_parent" />
         <TextView
             android:layout_width="match_parent"
             android:paddingStart="20dp"
@@ -36,8 +24,8 @@
             android:textSize="20sp"
             android:layout_marginBottom="28dp"
             android:gravity="center"
-            android:text="How likely are you recommend Apple to your friends?"
-            android:id="@+id/winlytics_text_1"
+            android:text=""
+            android:id="@+id/winlytics_head_question"
             android:textColor="#000000"
             android:layout_height="wrap_content" />
         <Button
@@ -205,22 +193,23 @@
                 android:layout_width="match_parent"
                 android:gravity="center"
                 android:textColor="#000000"
-                android:id="@+id/winlytics_welcoming_text"
+                android:id="@+id/winlytics_afteranswer_head"
+                android:textSize="20sp"
                 android:padding="20dp"
-                android:text="WE ARE HAPPY TO HEAR ASDASDASDAS DASSDASDA ASDDA"
+                android:textStyle="bold"
                 android:layout_height="wrap_content" />
             <TextView
                 android:layout_width="match_parent"
-                android:text="Tell Us Why?"
                 android:textColor="#000000"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
+                android:textSize="16sp"
+                android:gravity="center"
                 android:id="@+id/winlytics_optional_text_title_area"
                 android:layout_height="wrap_content" />
             <EditText
                 android:layout_width="match_parent"
-                android:hint="asdasdasd"
                 android:gravity="start"
                 android:padding="8dp"
                 android:layout_marginBottom="20dp"
@@ -239,6 +228,7 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginBottom="20dp"
                 android:layout_gravity="center"
+                android:textStyle="bold"
                 android:id="@+id/winlytics_submit"
                 android:layout_height="wrap_content" />
         </LinearLayout>

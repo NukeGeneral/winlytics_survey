@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import org.json.JSONException;
@@ -13,6 +12,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,11 +29,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 public class Winlytics{
-    private static String WINLYTICS_URL = "http://www.heydate.com/api/v4/references/google_play?winlytics_test_id=";
+    private static String WINLYTICS_URL = "http://www.winlytics.io/api/responses";
     private static Winlytics winlytics;
     private static WinlyticsSurvey survey = new WinlyticsSurvey();
     private static AtomicBoolean mutex = new AtomicBoolean(false);
+    private static String SURVEYID = "";
     private static String AUTH_TOKEN = "";
+    private static String USERID = "";
+    private static String USERNAME = "";
+    private static String EMAIL = "";
+    private static String WINLYTICS_CATEGORY_TAG = "";
     private String response;
     private WinlyticsAdapter mLayout;
     private boolean UIReady = false;
@@ -52,8 +58,14 @@ public class Winlytics{
      * @param context Must be non-null if requested with Default UI,it can be Activity or Fragment Context
      * @return Winlytics instance object
      */
-    public static Winlytics createSurvey(@NonNull String authToken,@NonNull Context context){
+    public static Winlytics createSurvey(@NonNull String authToken,@NonNull String surveyId,@NonNull String userId,@NonNull String userName,
+            @NonNull String email,@NonNull String categoryTags , @NonNull Context context){
+        SURVEYID = surveyId;
         AUTH_TOKEN = authToken;
+        USERID  = userId;
+        USERNAME = userName;
+        EMAIL = email;
+        WINLYTICS_CATEGORY_TAG = categoryTags;
         if(winlytics == null){
             winlytics = new Winlytics();
         }
@@ -81,12 +93,17 @@ public class Winlytics{
 
     private void setSurveyItems(){
         if(UIReady && !mutex.get()){
-            mLayout.setOptionalTextAreaText(survey.getTemp());
-            mLayout.setBrandName(survey.getBrandName());
-            mLayout.setSubmitButtonText("Submit");
-            mLayout.setImage(survey.getImageUrl());
-            mLayout.setBrandColor(0xFF48A9D7);
-            mLayout.setButtonAnswerWelcomingText("sdadsdsa dsadsad sadasasdasdsadsad dasdsadas");
+            mLayout.setCanYouAdvice(survey.getCanYouAdvice());
+            mLayout.setSorryToHearThat(survey.getSorryToHearThat());
+            mLayout.setThanks(survey.getThanks());
+            mLayout.setWhyDidYouChoose(survey.getWhyDidYouChoose());
+            mLayout.setWeWillUseYourFeedback(survey.getWeWillUseYourFeedback());
+            mLayout.setFeedbackPlaceholder(survey.getFeedbackPlaceholder());
+            mLayout.setSubmit(survey.getSubmit());
+            mLayout.setThankYou(survey.getThankYou());
+            mLayout.setThanksAgain(survey.getThanksAgain());
+            mLayout.setWeReallyAppreciateYourFeedback(survey.getWeReallyAppreciateYourFeedback());
+            mLayout.setBrandColor(survey.getBrandColor());
             mLayout.dialog.show();
         }
     }
@@ -104,7 +121,7 @@ public class Winlytics{
                     public void run() {
                        new SetWinlyticsSurvey().execute();
                     }
-                },2000);
+                },500);
                 break;
             case MALFORMED_RESPONSE:
                 new Handler().postDelayed(new Runnable() {
@@ -112,7 +129,7 @@ public class Winlytics{
                     public void run() {
                         new SetWinlyticsSurvey().execute();
                     }
-                },2000);
+                },500);
                 break;
             case PROTOCOL_ERROR:
                 //Open an issue
@@ -125,16 +142,37 @@ public class Winlytics{
     private void loadSurvey() {
         winlytics.response = null;
         try {
-            URL url = new URL(WINLYTICS_URL+AUTH_TOKEN);
+            URL url = new URL(WINLYTICS_URL);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(10000);
-            conn.setRequestProperty("User-Agent","OkHttp Winlytics");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty("charset", "utf-8");
             conn.setRequestProperty("Accept-Language", Locale.getDefault().getLanguage());
-            InputStream in = new BufferedInputStream(conn.getInputStream());
-            setConnectionStatus(WinlyticsError.OK);
-            convertStreamToString(in);
+            String urlParameters = "surveyId="+SURVEYID+"&userId="+USERID+"&name="+USERNAME
+                    +"&email="+EMAIL+"&category="+WINLYTICS_CATEGORY_TAG+"&token="+AUTH_TOKEN
+                    +"&referrer=winlytics=test";
+            byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+            try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+                wr.write(postData);
+            }
+            int statusCode = conn.getResponseCode();
+            if(statusCode == 201){
+                InputStream in = new BufferedInputStream(conn.getInputStream());
+                setConnectionStatus(WinlyticsError.OK);
+                convertStreamToString(in);
+            }
+            else if(statusCode == 204){
+                //Means no content,we won't show anything
+                setConnectionStatus(WinlyticsError.OK);
+                winlytics.response = null;
+            }
+            else{
+                setConnectionStatus(WinlyticsError.UNKNOWN_ERROR);
+            }
         } catch (MalformedURLException e) {
             setConnectionStatus(WinlyticsError.MALFORMED_RESPONSE);
         } catch (ProtocolException e) {
@@ -185,19 +223,28 @@ public class Winlytics{
                         survey = new WinlyticsSurvey();
                     }
                 }
-                JSONObject contacts = jsonObj.getJSONObject("debug");
-                survey.setTemp(contacts.getString("warnings"));
-                survey.setImageUrl("https://www.logodesignlove.com/images/classic/apple-logo-rob-janoff-01.jpg");
-                survey.setBrandName("How likely are you recommend Apple to your friends?");
+                survey.setBrandColor(jsonObj.getString("brandColor"));
+                survey.setSubmitToken(jsonObj.getString("submitToken"));
+                JSONObject translations = jsonObj.getJSONObject("translations");
+                survey.setCanYouAdvice(translations.getString("canYouAdvice"));
+                survey.setSorryToHearThat(translations.getString("sorryToHearThat"));
+                survey.setThanks(translations.getString("thanks"));
+                survey.setWhyDidYouChoose(translations.getString("whyDidYouChoose"));
+                survey.setWeWillUseYourFeedback(translations.getString("weWillUseYourFeedback"));
+                survey.setFeedbackPlaceholder(translations.getString("feedbackPlaceholder"));
+                survey.setSubmit(translations.getString("submit"));
+                survey.setThankYou(translations.getString("thankYou"));
+                survey.setThanksAgain(translations.getString("thanksAgain"));
+                survey.setWeReallyAppreciateYourFeedback(translations.getString("weReallyAppreciateYourFeedback"));
             } catch (JSONException e) {
                 winlytics.setConnectionStatus(WinlyticsError.MALFORMED_RESPONSE);
             }
-            mutex.set(false);
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            mutex.set(false);
             winlytics.setSurveyItems();
         }
     }

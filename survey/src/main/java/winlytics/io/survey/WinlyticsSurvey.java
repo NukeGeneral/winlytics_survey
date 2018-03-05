@@ -9,45 +9,130 @@ public class WinlyticsSurvey {
     /**
      * Generating Winlytics Survey from API
      */
-    private int userId;
-    private int surveyId;
-    private String imageUrl;
-    private String temp;
 
-    String getBrandName() {return brandName;}
-    void setBrandName(String brandName) {this.brandName = brandName;}
-    private String brandName;
-    String getTemp() {
-        return temp;
+    private String submitToken;
+    private String brandColor;
+    private String canYouAdvice;
+    private String sorryToHearThat;
+    private String thanks;
+    private String whyDidYouChoose;
+    private String weWillUseYourFeedback;
+    private String feedbackPlaceholder;
+    private String submit;
+    private String thankYou;
+    private String thanksAgain;
+    private String weReallyAppreciateYourFeedback;
+
+    String getCanYouAdvice() {
+        return canYouAdvice;
     }
-    void setTemp(String temp) {
-        this.temp = temp;
+
+    void setCanYouAdvice(String canYouAdvice) {
+        this.canYouAdvice = canYouAdvice;
     }
-    int getUserId() {
-        return userId;
+
+    String getSorryToHearThat() {
+        return sorryToHearThat;
     }
-    void setUserId(int userId) {
-        this.userId = userId;
+
+    void setSorryToHearThat(String sorryToHearThat) {
+        this.sorryToHearThat = sorryToHearThat;
     }
-    int getSurveyId() {
-        return surveyId;
+
+    String getThanks() {
+        return thanks;
     }
-    void setSurveyId(int surveyId) {
-        this.surveyId = surveyId;
+
+    void setThanks(String thanks) {
+        this.thanks = thanks;
     }
-    String getImageUrl() {
-        return imageUrl;
+
+    String getWhyDidYouChoose() {
+        return whyDidYouChoose;
     }
-    void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+
+    void setWhyDidYouChoose(String whyDidYouChoose) {
+        this.whyDidYouChoose = whyDidYouChoose;
+    }
+
+    String getWeWillUseYourFeedback() {
+        return weWillUseYourFeedback;
+    }
+
+    void setWeWillUseYourFeedback(String weWillUseYourFeedback) {
+        this.weWillUseYourFeedback = weWillUseYourFeedback;
+    }
+
+    String getFeedbackPlaceholder() {
+        return feedbackPlaceholder;
+    }
+
+    void setFeedbackPlaceholder(String feedbackPlaceholder) {
+        this.feedbackPlaceholder = feedbackPlaceholder;
+    }
+
+    String getSubmit() {
+        return submit;
+    }
+
+    void setSubmit(String submit) {
+        this.submit = submit;
+    }
+
+    String getThankYou() {
+        return thankYou;
+    }
+
+    void setThankYou(String thankYou) {
+        this.thankYou = thankYou;
+    }
+
+    String getThanksAgain() {
+        return thanksAgain;
+    }
+
+    void setThanksAgain(String thanksAgain) {
+        this.thanksAgain = thanksAgain;
+    }
+
+    String getWeReallyAppreciateYourFeedback() {
+        return weReallyAppreciateYourFeedback;
+    }
+
+    void setWeReallyAppreciateYourFeedback(String weReallyAppreciateYourFeedback) {
+        this.weReallyAppreciateYourFeedback = weReallyAppreciateYourFeedback;
+    }
+
+    String getSubmitToken() {
+        return submitToken;
+    }
+
+    void setSubmitToken(String submitToken) {
+        this.submitToken = submitToken;
+    }
+
+    String getBrandColor() {
+        return brandColor;
+    }
+
+    void setBrandColor(String brandColor) {
+        this.brandColor = brandColor;
     }
 
     boolean resetSurvey(){
         try{
-            userId = 0;
-            surveyId = 0;
-            temp = null;
-            imageUrl = null;
+            setCanYouAdvice(null);
+            setSorryToHearThat(null);
+            setThanks(null);
+            setWhyDidYouChoose(null);
+            setWeWillUseYourFeedback(null);
+            setFeedbackPlaceholder(null);
+            setSubmit(null);
+            setThankYou(null);
+            setThanksAgain(null);
+            setWeReallyAppreciateYourFeedback(null);
+            setSubmitToken(null);
+            setBrandColor(null);
             return true;
         }catch (Exception e){
             return false;

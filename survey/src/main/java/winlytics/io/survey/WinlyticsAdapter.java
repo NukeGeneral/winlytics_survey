@@ -2,26 +2,17 @@ package winlytics.io.survey;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.media.Image;
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import java.io.InputStream;
 
 /**
  * Created by Umur Kaya on 2/20/18.
@@ -29,17 +20,20 @@ import java.io.InputStream;
 
 class WinlyticsAdapter extends Dialog{
 
-    private final TextView title,winlytics_optional_text_title_area,winlytics_welcoming_text;
-    private TextView referenceHolder;
+    private final TextView winlytics_head_question,winlytics_optional_text_title_area, winlytics_afteranswer_head;
+    private Button referenceHolder;
     private final Button button0,button1,button2,button3,button4,button5,button6,button7,button8,button9,button10,winlytics_submit;
     private final LinearLayout winlytics_optional_text_area;
     private final EditText winlytics_optional_edit_text_area;
-    private final ImageView winlytics_customer_logo;
     private final ImageButton winlytics_cancel_action;
     private final ScrollView winlytics_scroll;
-    private String resultNumber;
+    private String resultNumber,sorryToHearThat,thanks,whyDidYouChoose,weWillUseYourFeedback,feedbackPlaceholder
+            ,thankYou,thanksAgain,weReallyAppreciateYourFeedback,concatenatedFeedback = null;
     private Context context;
     Dialog dialog;
+    private int selectionColor;
+    private GradientDrawable solidDrawable = new GradientDrawable();
+    private GradientDrawable withBorderDrawable = new GradientDrawable();
 
     interface WinlyticsAdapterNotifier{
         void notifyAdapterIsReady();
@@ -53,8 +47,7 @@ class WinlyticsAdapter extends Dialog{
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
         this.context = context;
         //Dialog setup
-        winlytics_customer_logo = (ImageView) dialog.findViewById(R.id.winlytics_customer_logo);
-        title = (TextView) dialog.findViewById(R.id.winlytics_text_1);
+        winlytics_head_question = (TextView) dialog.findViewById(R.id.winlytics_head_question);
         button0 = (Button) dialog.findViewById(R.id.winlytics_button_0);
         button1 = (Button) dialog.findViewById(R.id.winlytics_button_1);
         button2 = (Button) dialog.findViewById(R.id.winlytics_button_2);
@@ -69,10 +62,11 @@ class WinlyticsAdapter extends Dialog{
         winlytics_optional_text_area = (LinearLayout) dialog.findViewById(R.id.winlytics_optional_text_area);
         winlytics_optional_text_title_area = (TextView) dialog.findViewById(R.id.winlytics_optional_text_title_area);
         winlytics_optional_edit_text_area = (EditText) dialog.findViewById(R.id.winlytics_optional_edit_text_area);
-        winlytics_welcoming_text = (TextView) dialog.findViewById(R.id.winlytics_welcoming_text);
+        winlytics_afteranswer_head = (TextView) dialog.findViewById(R.id.winlytics_afteranswer_head);
         winlytics_submit = (Button) dialog.findViewById(R.id.winlytics_submit);
         winlytics_scroll = (ScrollView) dialog.findViewById(R.id.winlytics_scroll);
         winlytics_cancel_action = (ImageButton) dialog.findViewById(R.id.winlytics_cancel_action);
+        //Sad and Happy Buttons are based on NPS system
 
         //Set Button UnHappy Listener
 
@@ -80,10 +74,10 @@ class WinlyticsAdapter extends Dialog{
             @Override
             public void onClick(View v) {
                 if(referenceHolder != null){
-                    referenceHolder.setBackgroundResource(R.drawable.rounded_button_background_gray_onlyborder);
-                    referenceHolder.setTextColor(context.getResources().getColor(R.color.black));
+                    referenceHolder.setBackground(withBorderDrawable);
+                    referenceHolder.setTextColor(selectionColor);
                 }
-                referenceHolder = (TextView)v;
+                referenceHolder = (Button) v;
                 resultNumber = ((String) referenceHolder.getTag());
                 winlytics_optional_text_area.setVisibility(View.VISIBLE);
                 v.post(new Runnable() {
@@ -94,8 +88,14 @@ class WinlyticsAdapter extends Dialog{
                         }
                     }
                 });
-                referenceHolder.setBackgroundResource(R.drawable.rounded_button_background_gray_withborder);
+                referenceHolder.setBackground(solidDrawable);
                 referenceHolder.setTextColor(context.getResources().getColor(R.color.white));
+                winlytics_afteranswer_head.setText(sorryToHearThat);
+                if(concatenatedFeedback == null){
+                    concatenatedFeedback = whyDidYouChoose + " " + weWillUseYourFeedback;
+                    winlytics_optional_text_title_area.setText(concatenatedFeedback);
+                    winlytics_optional_edit_text_area.setHint(feedbackPlaceholder);
+                }
                 //Send result
             }
         };
@@ -106,10 +106,10 @@ class WinlyticsAdapter extends Dialog{
             @Override
             public void onClick(View v) {
                 if(referenceHolder != null){
-                    referenceHolder.setBackgroundResource(R.drawable.rounded_button_background_gray_onlyborder);
-                    referenceHolder.setTextColor(context.getResources().getColor(R.color.black));
+                    referenceHolder.setBackground(withBorderDrawable);
+                    referenceHolder.setTextColor(selectionColor);
                 }
-                referenceHolder = (TextView)v;
+                referenceHolder = (Button)v;
                 resultNumber = ((String) referenceHolder.getTag());
                 winlytics_optional_text_area.setVisibility(View.VISIBLE);
                 v.post(new Runnable() {
@@ -120,9 +120,16 @@ class WinlyticsAdapter extends Dialog{
                         }
                     }
                 });
-                referenceHolder.setBackgroundResource(R.drawable.rounded_button_background_gray_withborder);
+                referenceHolder.setBackground(solidDrawable);
                 referenceHolder.setTextColor(context.getResources().getColor(R.color.white));
+                winlytics_afteranswer_head.setText(thanks);
+                if(concatenatedFeedback == null){
+                    concatenatedFeedback = whyDidYouChoose + " " + weWillUseYourFeedback;
+                    winlytics_optional_text_title_area.setText(concatenatedFeedback);
+                    winlytics_optional_edit_text_area.setHint(feedbackPlaceholder);
+                }
                 //Send result
+
             }
         };
 
@@ -157,59 +164,40 @@ class WinlyticsAdapter extends Dialog{
         mListener.notifyAdapterIsReady();
     }
 
-    void setImage(String url){
-        new DownloadImageTask().execute(url);
+    void setCanYouAdvice(String canYouAdvice) {winlytics_head_question.setText(canYouAdvice);}
+    void setSorryToHearThat(String sorryToHearThat) {this.sorryToHearThat = sorryToHearThat;}
+    void setThanks(String thanks) {this.thanks = thanks;}
+    void setWhyDidYouChoose(String whyDidYouChoose) {this.whyDidYouChoose = whyDidYouChoose;}
+    void setWeWillUseYourFeedback(String weWillUseYourFeedback) {this.weWillUseYourFeedback = weWillUseYourFeedback;}
+    void setFeedbackPlaceholder(String feedbackPlaceholder) {this.feedbackPlaceholder = feedbackPlaceholder;}
+    void setSubmit(String submit) {winlytics_submit.setText(submit);}
+    void setThankYou(String thankYou) {this.thankYou = thankYou;}
+    void setThanksAgain(String thanksAgain) {this.thanksAgain = thanksAgain;}
+    void setWeReallyAppreciateYourFeedback(String weReallyAppreciateYourFeedback) {this.weReallyAppreciateYourFeedback = weReallyAppreciateYourFeedback;}
+    void setBrandColor(String color){
+        selectionColor = Color.parseColor(color);
+        button0.setTextColor(selectionColor);
+        button1.setTextColor(selectionColor);
+        button2.setTextColor(selectionColor);
+        button3.setTextColor(selectionColor);
+        button4.setTextColor(selectionColor);
+        button5.setTextColor(selectionColor);
+        button6.setTextColor(selectionColor);
+        button7.setTextColor(selectionColor);
+        button8.setTextColor(selectionColor);
+        button9.setTextColor(selectionColor);
+        button10.setTextColor(selectionColor);
+
+        // prepare button background borders
+        solidDrawable.setColor(selectionColor);
+        solidDrawable.setCornerRadius(pxFromDp(context,5));
+
+        withBorderDrawable.setColor(selectionColor);
+        withBorderDrawable.setCornerRadius(pxFromDp(context,5));
+        withBorderDrawable.setStroke((int)pxFromDp(context,.5f),selectionColor);
     }
 
-    void setBrandColor(int color){
-        title.setTextColor(color);
-    }
-
-    void setSelectedButtonColor(int color){
-        GradientDrawable temp = (GradientDrawable)context.getResources().getDrawable(R.drawable.rounded_button_background_gray_withborder);
-        temp.setColor(color);
-    }
-
-    void setSubmitButtonTextColor(int color){
-        winlytics_submit.setTextColor(color);
-    }
-
-    void setSubmitButtonColor(int color){
-        winlytics_submit.setBackgroundColor(color);
-    }
-
-    void setSubmitButtonText(String text){
-        winlytics_submit.setText(text);
-    }
-
-    void setBrandName(String text){
-        title.setText(text);
-    }
-
-    void setOptionalTextAreaText(String text){
-        winlytics_optional_text_title_area.setText(text);
-    }
-
-    void setButtonAnswerWelcomingText(String text){
-        winlytics_welcoming_text.setText(text);
-    }
-
-    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-
-        protected Bitmap doInBackground(String... urls) {
-            String urldisplay = urls[0];
-            Bitmap mIcon11 = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                mIcon11 = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return mIcon11;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            winlytics_customer_logo.setImageBitmap(result);
-        }
+    private static float pxFromDp(final Context context, final float dp) {
+        return dp * context.getResources().getDisplayMetrics().density;
     }
 }
