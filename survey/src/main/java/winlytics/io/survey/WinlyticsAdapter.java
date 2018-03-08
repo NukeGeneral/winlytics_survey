@@ -20,14 +20,14 @@ import android.widget.TextView;
 
 class WinlyticsAdapter extends Dialog{
 
-    private final TextView winlytics_head_question,winlytics_optional_text_title_area, winlytics_afteranswer_head;
+    private final TextView winlytics_head_question,winlytics_optional_text_title_area, winlytics_afteranswer_head,powered_by_text;
     private Button referenceHolder;
     private final Button button0,button1,button2,button3,button4,button5,button6,button7,button8,button9,button10,winlytics_submit;
     private final LinearLayout winlytics_optional_text_area;
     private final EditText winlytics_optional_edit_text_area;
     private final ImageButton winlytics_cancel_action;
     private final ScrollView winlytics_scroll;
-    private String resultNumber,sorryToHearThat,thanks,whyDidYouChoose,weWillUseYourFeedback,feedbackPlaceholder
+    private String resultNumber,sorryToHearThat,thanks,whyDidYouChoose,weWillUseYourFeedback
             ,thankYou,thanksAgain,weReallyAppreciateYourFeedback,concatenatedFeedback = null;
     private Context context;
     Dialog dialog;
@@ -66,6 +66,7 @@ class WinlyticsAdapter extends Dialog{
         winlytics_submit = (Button) dialog.findViewById(R.id.winlytics_submit);
         winlytics_scroll = (ScrollView) dialog.findViewById(R.id.winlytics_scroll);
         winlytics_cancel_action = (ImageButton) dialog.findViewById(R.id.winlytics_cancel_action);
+        powered_by_text = (TextView) dialog.findViewById(R.id.powered_by_text);
         //Sad and Happy Buttons are based on NPS system
 
         //Set Button UnHappy Listener
@@ -74,7 +75,7 @@ class WinlyticsAdapter extends Dialog{
             @Override
             public void onClick(View v) {
                 if(referenceHolder != null){
-                    referenceHolder.setBackground(withBorderDrawable);
+                    referenceHolder.setBackground(solidDrawable);
                     referenceHolder.setTextColor(selectionColor);
                 }
                 referenceHolder = (Button) v;
@@ -84,18 +85,16 @@ class WinlyticsAdapter extends Dialog{
                     @Override
                     public void run() {
                         if(winlytics_scroll.canScrollVertically(1)){
-                            winlytics_scroll.smoothScrollTo(0,winlytics_scroll.getBottom());
+                            winlytics_scroll.smoothScrollTo(0,powered_by_text.getBottom());
                         }
                     }
                 });
-                referenceHolder.setBackground(solidDrawable);
+                referenceHolder.setBackground(withBorderDrawable);
                 referenceHolder.setTextColor(context.getResources().getColor(R.color.white));
                 winlytics_afteranswer_head.setText(sorryToHearThat);
-                if(concatenatedFeedback == null){
-                    concatenatedFeedback = whyDidYouChoose + " " + weWillUseYourFeedback;
-                    winlytics_optional_text_title_area.setText(concatenatedFeedback);
-                    winlytics_optional_edit_text_area.setHint(feedbackPlaceholder);
-                }
+                String temp = whyDidYouChoose.replace("%number%",resultNumber);
+                concatenatedFeedback = temp + " " + weWillUseYourFeedback;
+                winlytics_optional_text_title_area.setText(concatenatedFeedback);
                 //Send result
             }
         };
@@ -106,7 +105,7 @@ class WinlyticsAdapter extends Dialog{
             @Override
             public void onClick(View v) {
                 if(referenceHolder != null){
-                    referenceHolder.setBackground(withBorderDrawable);
+                    referenceHolder.setBackground(solidDrawable);
                     referenceHolder.setTextColor(selectionColor);
                 }
                 referenceHolder = (Button)v;
@@ -116,18 +115,16 @@ class WinlyticsAdapter extends Dialog{
                     @Override
                     public void run() {
                         if(winlytics_scroll.canScrollVertically(1)){
-                            winlytics_scroll.smoothScrollTo(0,winlytics_scroll.getBottom());
+                            winlytics_scroll.smoothScrollTo(0,powered_by_text.getBottom());
                         }
                     }
                 });
-                referenceHolder.setBackground(solidDrawable);
+                referenceHolder.setBackground(withBorderDrawable);
                 referenceHolder.setTextColor(context.getResources().getColor(R.color.white));
                 winlytics_afteranswer_head.setText(thanks);
-                if(concatenatedFeedback == null){
-                    concatenatedFeedback = whyDidYouChoose + " " + weWillUseYourFeedback;
-                    winlytics_optional_text_title_area.setText(concatenatedFeedback);
-                    winlytics_optional_edit_text_area.setHint(feedbackPlaceholder);
-                }
+                String temp = whyDidYouChoose.replace("%number%",resultNumber);
+                concatenatedFeedback = temp + " " + weWillUseYourFeedback;
+                winlytics_optional_text_title_area.setText(concatenatedFeedback);
                 //Send result
 
             }
@@ -169,7 +166,7 @@ class WinlyticsAdapter extends Dialog{
     void setThanks(String thanks) {this.thanks = thanks;}
     void setWhyDidYouChoose(String whyDidYouChoose) {this.whyDidYouChoose = whyDidYouChoose;}
     void setWeWillUseYourFeedback(String weWillUseYourFeedback) {this.weWillUseYourFeedback = weWillUseYourFeedback;}
-    void setFeedbackPlaceholder(String feedbackPlaceholder) {this.feedbackPlaceholder = feedbackPlaceholder;}
+    void setFeedbackPlaceholder(String feedbackPlaceholder) {winlytics_optional_edit_text_area.setHint(feedbackPlaceholder);}
     void setSubmit(String submit) {winlytics_submit.setText(submit);}
     void setThankYou(String thankYou) {this.thankYou = thankYou;}
     void setThanksAgain(String thanksAgain) {this.thanksAgain = thanksAgain;}
@@ -189,12 +186,29 @@ class WinlyticsAdapter extends Dialog{
         button10.setTextColor(selectionColor);
 
         // prepare button background borders
-        solidDrawable.setColor(selectionColor);
+        solidDrawable.setColor(0xFFFFFFFF);
+        solidDrawable.setShape(GradientDrawable.RECTANGLE);
+        solidDrawable.setStroke((int)pxFromDp(context,.5f),0xFF363636);
         solidDrawable.setCornerRadius(pxFromDp(context,5));
 
         withBorderDrawable.setColor(selectionColor);
         withBorderDrawable.setCornerRadius(pxFromDp(context,5));
         withBorderDrawable.setStroke((int)pxFromDp(context,.5f),selectionColor);
+
+        button0.setBackground(solidDrawable);
+        button1.setBackground(solidDrawable);
+        button2.setBackground(solidDrawable);
+        button3.setBackground(solidDrawable);
+        button4.setBackground(solidDrawable);
+        button5.setBackground(solidDrawable);
+        button6.setBackground(solidDrawable);
+        button7.setBackground(solidDrawable);
+        button8.setBackground(solidDrawable);
+        button9.setBackground(solidDrawable);
+        button10.setBackground(solidDrawable);
+
+        winlytics_optional_edit_text_area.setBackground(solidDrawable);
+        winlytics_submit.setBackground(withBorderDrawable);
     }
 
     private static float pxFromDp(final Context context, final float dp) {
