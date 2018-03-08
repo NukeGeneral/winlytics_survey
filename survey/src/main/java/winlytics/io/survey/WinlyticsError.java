@@ -33,5 +33,9 @@ enum WinlyticsError{
     /**
      * Unknown error logging
      */
-    UNKNOWN_ERROR
+    UNKNOWN_ERROR,
+    /**
+     * Wrong authenication parameters sended
+     */
+    AUTHENICATION_ERROR
 }

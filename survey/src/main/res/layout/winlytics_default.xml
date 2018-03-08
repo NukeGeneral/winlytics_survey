@@ -223,7 +223,7 @@
             android:layout_width="match_parent"
             android:gravity="center"
             android:textSize="12sp"
-            android:id="@+id/powered_by_text"
+            android:id="@+id/powered_byext"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:text="Powered by Winlytics"

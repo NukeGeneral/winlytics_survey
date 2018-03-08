@@ -5,7 +5,7 @@ package winlytics.io.survey;
  * Created by Umur Kaya on 2/19/18.
  */
 
-public class WinlyticsSurvey {
+class WinlyticsSurvey {
     /**
      * Generating Winlytics Survey from API
      */

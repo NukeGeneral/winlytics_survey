@@ -34,11 +34,11 @@ public class Winlytics{
     private static WinlyticsSurvey survey = new WinlyticsSurvey();
     private static AtomicBoolean mutex = new AtomicBoolean(false);
     private static String SURVEYID = "";
-    private static String AUTH_TOKEN = "";
+    static String AUTH_TOKEN = "";
     private static String USERID = "";
     private static String USERNAME = "";
     private static String EMAIL = "";
-    private static String WINLYTICS_CATEGORY_TAG = "";
+    static String WINLYTICS_CATEGORY_TAG = "";
     private String response;
     private WinlyticsAdapter mLayout;
     private boolean UIReady = false;
@@ -83,8 +83,7 @@ public class Winlytics{
             winlytics.mLayout = new WinlyticsAdapter(new WinlyticsAdapter.WinlyticsAdapterNotifier() {
                 @Override
                 public void notifyAdapterIsReady() {
-                    winlytics.UIReady = true;
-                    winlytics.setSurveyItems();
+
                 }
             },context);
         }
@@ -104,6 +103,7 @@ public class Winlytics{
             mLayout.setThanksAgain(survey.getThanksAgain());
             mLayout.setWeReallyAppreciateYourFeedback(survey.getWeReallyAppreciateYourFeedback());
             mLayout.setBrandColor(survey.getBrandColor());
+            mLayout.setSubmitToken(survey.getSubmitToken());
             mLayout.dialog.show();
         }
     }
