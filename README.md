@@ -27,7 +27,8 @@ Just call in your activity or fragment,it will show a Dialog easily.
 Context can be Activity or Fragment context
 ```javascript
   Winlytics.createSurvey(/*Winlytics authencation token*/,
-  /* Survey ID */,/*User id or some unique identifier*/,
+  /* Survey ID */,
+  /*User id or some unique identifier*/,
   /*User name or empty string if not defined*/,
   /*E-mail or empty string if not defined*/,
   /*An activity or fragment name*/,
