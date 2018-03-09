@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import org.json.JSONException;
@@ -58,8 +59,8 @@ public class Winlytics{
      * @param context Must be non-null if requested with Default UI,it can be Activity or Fragment Context
      * @return Winlytics instance object
      */
-    public static Winlytics createSurvey(@NonNull String authToken,@NonNull String surveyId,@NonNull String userId,@NonNull String userName,
-            @NonNull String email,@NonNull String categoryTags , @NonNull Context context){
+    public static void createSurvey(@NonNull String authToken,@NonNull String surveyId,@NonNull String userId,@NonNull String userName,
+            @NonNull String email,@NonNull String categoryTags , @Nullable Context context){
         SURVEYID = surveyId;
         AUTH_TOKEN = authToken;
         USERID  = userId;
@@ -83,11 +84,11 @@ public class Winlytics{
             winlytics.mLayout = new WinlyticsAdapter(new WinlyticsAdapter.WinlyticsAdapterNotifier() {
                 @Override
                 public void notifyAdapterIsReady() {
-
+                    winlytics.UIReady = true;
+                    winlytics.setSurveyItems();
                 }
             },context);
         }
-        return winlytics;
     }
 
     private void setSurveyItems(){

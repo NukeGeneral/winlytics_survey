@@ -1,5 +1,6 @@
 package winlytics.io.survey;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -8,12 +9,14 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -27,13 +30,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Umur Kaya on 2/20/18.
@@ -52,7 +56,6 @@ class WinlyticsAdapter extends Dialog{
             ,thankYou,thanksAgain,weReallyAppreciateYourFeedback,submitToken,concatenatedFeedback = null;
     private Context context;
     Dialog dialog;
-    private BottomSheetDialog bottomDialog;
     private int selectionColor;
     private GradientDrawable solidDrawable = new GradientDrawable();
     private GradientDrawable withBorderDrawable = new GradientDrawable();
@@ -62,13 +65,12 @@ class WinlyticsAdapter extends Dialog{
         void notifyAdapterIsReady();
     }
 
-    WinlyticsAdapter(WinlyticsAdapterNotifier mListener,final Context context){
+    WinlyticsAdapter(final WinlyticsAdapterNotifier mListener, final Context context){
         super(context);
         dialog = new Dialog(context,R.style.DialogTheme);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.getWindow().setContentView(R.layout.winlytics_default);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
-        bottomDialog = new WinlyticsBottomDialog(context);
         this.context = context;
         //Dialog setup
         winlytics_head_question = (TextView) dialog.findViewById(R.id.winlytics_head_question);
@@ -175,7 +177,7 @@ class WinlyticsAdapter extends Dialog{
                 String resultText = winlytics_optional_edit_text_area.getText().toString();
                 isFromSubmit = true;
                 String temp = WINLYTICS_SUBMIT_URL.replace("{submitToken}",submitToken);
-                new SendResult(bottomDialog,resultNumber,temp,resultText,Winlytics.WINLYTICS_CATEGORY_TAG,isFromSubmit).execute();
+                new SendResult(resultNumber,temp,resultText,Winlytics.WINLYTICS_CATEGORY_TAG,isFromSubmit).execute();
                 dialog.dismiss();
             }
         });
@@ -242,23 +244,28 @@ class WinlyticsAdapter extends Dialog{
         return dp * context.getResources().getDisplayMetrics().density;
     }
 
-    private static class SendResult extends AsyncTask<Void,Void,String>{
+    @SuppressLint("StaticFieldLeak")
+    //This should run no matter application lives or not to send results correctly
+    private class SendResult extends AsyncTask<Void,Void,Void>{
 
         private String url,comment,category,number;
         private boolean fromSubmit;
-        private WeakReference<BottomSheetDialog> mDialog;
 
-        SendResult(BottomSheetDialog dialog,String number,String url,String comment,String category,boolean fromSubmit){
+        SendResult(String number,String url,String comment,String category,boolean fromSubmit){
             this.url = url;
             this.comment = comment;
             this.category = category;
             this.fromSubmit = fromSubmit;
             this.number = number;
-            this.mDialog = new WeakReference<BottomSheetDialog>(dialog);
         }
 
         @Override
-        protected String doInBackground(Void... voids) {
+        protected void onPostExecute(Void aVoid) {
+            new WinlyticsBottomDialog(context);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
             try{
                 URL url = new URL(this.url);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -282,7 +289,6 @@ class WinlyticsAdapter extends Dialog{
                     InputStream in = new BufferedInputStream(conn.getInputStream());
                     setConnectionStatus(WinlyticsError.OK);
                     convertStreamToString(in);
-                    this.mDialog.get().show();
                 }
                 else if(statusCode == 204){
                     //Means no content,we won't show anything
@@ -307,7 +313,7 @@ class WinlyticsAdapter extends Dialog{
         }
     }
 
-    private static void setConnectionStatus(WinlyticsError error){
+    private void setConnectionStatus(WinlyticsError error){
         switch (error){
             case OK:
                 break;
@@ -330,7 +336,7 @@ class WinlyticsAdapter extends Dialog{
     }
 
     @NonNull
-    private static void convertStreamToString(InputStream is) {
+    private void convertStreamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
         SystemClock.sleep(100);
@@ -359,26 +365,37 @@ class WinlyticsAdapter extends Dialog{
         }
     }
 
-    public class WinlyticsBottomDialog extends BottomSheetDialog {
+    private class WinlyticsBottomDialog extends BottomSheetDialog {
+
+        private TextView winlytics_thankyou_simple,winlytics_thankyou_detailed;
+        private ImageView winlytics_thankyou_image;
 
         WinlyticsBottomDialog(Context context){
             super(context);
-            bottomDialog = new BottomSheetDialog(context,R.style.DialogTheme);
-            bottomDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            bottomDialog.getWindow().setContentView(R.layout.winlytics_bottomdialog);
-            bottomDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-            TextView winlytics_thankyou_simple = (TextView) bottomDialog.findViewById(R.id.winlytics_thankyou_simple);
-            TextView winlytics_thankyou_detailed = (TextView) bottomDialog.findViewById(R.id.winlytics_thankyou_detailed);
-
-            //Burası reactive çalışmalı
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+            setContentView(R.layout.winlytics_bottomdialog);
+            setCanceledOnTouchOutside(true);
+            winlytics_thankyou_simple = (TextView) findViewById(R.id.winlytics_thankyou_simple);
+            winlytics_thankyou_detailed = (TextView) findViewById(R.id.winlytics_thankyou_detailed);
+            winlytics_thankyou_image = (ImageView) findViewById(R.id.winlytics_thankyou_image);
             if(Integer.parseInt(resultNumber) > 6){
                 winlytics_thankyou_simple.setText(thanksAgain);
+                winlytics_thankyou_image.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(),R.drawable.happyheart,null));
             }
             else{
                 winlytics_thankyou_simple.setText(thankYou);
+                winlytics_thankyou_image.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(),R.drawable.sadheart,null));
             }
+            winlytics_thankyou_image.setColorFilter(selectionColor);
             winlytics_thankyou_detailed.setText(weReallyAppreciateYourFeedback);
-            bottomDialog.show();
+            show();
+            final Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                public void run() {
+                    dismiss();
+                    timer.cancel(); //this will cancel the timer of the system
+                }
+            }, 1500);
         }
     }
 }
