@@ -3,6 +3,7 @@ package winlytics.io.survey;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
@@ -60,6 +61,7 @@ class WinlyticsAdapter extends Dialog{
     private GradientDrawable solidDrawable = new GradientDrawable();
     private GradientDrawable withBorderDrawable = new GradientDrawable();
     private static boolean isFromSubmit = false;
+    private SharedPreferences sharedPreferences;
 
     interface WinlyticsAdapterNotifier{
         void notifyAdapterIsReady();
@@ -278,8 +280,10 @@ class WinlyticsAdapter extends Dialog{
                 conn.setRequestProperty("charset", "utf-8");
                 conn.setRequestProperty("Accept-Language", Locale.getDefault().getLanguage());
                 String urlParameters = "type=web"+"&score="+number+"&comment="+comment
-                        +"&autoSubmitted="+fromSubmit+"&category="+category+"&token="+Winlytics.AUTH_TOKEN
-                        +"&referrer=winlytics=test";
+                        +"&autoSubmitted="+fromSubmit+"&category="+category+"&token="+Winlytics.UNIQUE_COOKIE_ID;
+                if(Winlytics.isTesting){
+                    urlParameters += "&referrer=winlytics=test";
+                }
                 byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
                 try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
                     wr.write(postData);

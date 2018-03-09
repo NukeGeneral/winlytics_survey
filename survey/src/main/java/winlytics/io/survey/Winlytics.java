@@ -1,6 +1,7 @@
 package winlytics.io.survey;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -35,7 +36,7 @@ public class Winlytics{
     private static WinlyticsSurvey survey = new WinlyticsSurvey();
     private static AtomicBoolean mutex = new AtomicBoolean(false);
     private static String SURVEYID = "";
-    static String AUTH_TOKEN = "";
+    static String UNIQUE_COOKIE_ID = "";
     private static String USERID = "";
     private static String USERNAME = "";
     private static String EMAIL = "";
@@ -43,6 +44,8 @@ public class Winlytics{
     private String response;
     private WinlyticsAdapter mLayout;
     private boolean UIReady = false;
+    private static SharedPreferences sharedPreferences;
+    static boolean isTesting = false;
 
     private Winlytics(){
         if(!mutex.getAndSet(true)){
@@ -55,18 +58,25 @@ public class Winlytics{
 
     @RequiresPermission(android.Manifest.permission.INTERNET)
     /**
-     * @param authToken This is a token which provided to you from winlytics.io dashboard
-     * @param context Must be non-null if requested with Default UI,it can be Activity or Fragment Context
-     * @return Winlytics instance object
+     * @param surveyId Winlytics survey ID provided in registration
+     * @param userId To identify users from each other(It should be unique for each user)
+     * @param userName Optional parameter to see user name in dashboard,it can be empty string
+     * @param email Optional parameter to see emails in dashboard,it can be empty string
+     * @param categoryTags This makes easier to analyse dashboard,it's like filter or activity/fragment name
+     * @param context This is activity or fragment context
+     * @param isTest is this a test request or not(default false)
      */
-    public static void createSurvey(@NonNull String authToken,@NonNull String surveyId,@NonNull String userId,@NonNull String userName,
-            @NonNull String email,@NonNull String categoryTags , @Nullable Context context){
+    public static void createSurvey(@NonNull String surveyId,@NonNull String userId,@Nullable String userName,
+            @Nullable String email,@NonNull String categoryTags , @NonNull Context context,boolean isTest){
         SURVEYID = surveyId;
-        AUTH_TOKEN = authToken;
         USERID  = userId;
-        USERNAME = userName;
-        EMAIL = email;
+        USERNAME = (userName == null) ? "" : userName;
+        EMAIL = (email == null) ? "" : email;
         WINLYTICS_CATEGORY_TAG = categoryTags;
+        isTesting = isTest;
+        sharedPreferences = context.getSharedPreferences("io.winlytics.prefs",Context.MODE_PRIVATE);
+        String temp = sharedPreferences.getString("io.winlytics.uniquecookieid",null);
+        UNIQUE_COOKIE_ID = (temp == null) ? "" : temp;
         if(winlytics == null){
             winlytics = new Winlytics();
         }
@@ -154,8 +164,10 @@ public class Winlytics{
             conn.setRequestProperty("charset", "utf-8");
             conn.setRequestProperty("Accept-Language", Locale.getDefault().getLanguage());
             String urlParameters = "surveyId="+SURVEYID+"&userId="+USERID+"&name="+USERNAME
-                    +"&email="+EMAIL+"&category="+WINLYTICS_CATEGORY_TAG+"&token="+AUTH_TOKEN
-                    +"&referrer=winlytics=test";
+                    +"&email="+EMAIL+"&category="+WINLYTICS_CATEGORY_TAG+"&token="+ UNIQUE_COOKIE_ID;
+            if(isTesting){
+                urlParameters += "&referrer=winlytics=test";
+            }
             byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
             try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
                 wr.write(postData);
@@ -224,6 +236,7 @@ public class Winlytics{
                         survey = new WinlyticsSurvey();
                     }
                 }
+                sharedPreferences.edit().putString("io.winlytics.uniquecookieid",jsonObj.getString("token")).apply();
                 survey.setBrandColor(jsonObj.getString("brandColor"));
                 survey.setSubmitToken(jsonObj.getString("submitToken"));
                 JSONObject translations = jsonObj.getJSONObject("translations");
