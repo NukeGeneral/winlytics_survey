@@ -3,7 +3,6 @@ package winlytics.io.survey;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,6 +23,8 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -46,14 +47,12 @@ public class Winlytics{
     private boolean UIReady = false;
     private static SharedPreferences sharedPreferences;
     static boolean isTesting = false;
+    static boolean isAppOnScreen = false;
+    private static boolean isSuccessfulResult = false;
+    private static int requestCount = 0;
 
     private Winlytics(){
-        if(!mutex.getAndSet(true)){
-            new SetWinlyticsSurvey().execute();
-        }
-        else{
-            throw new WinlyticsException("Winlytics should be called once per instance");
-        }
+        super();
     }
 
     @RequiresPermission(android.Manifest.permission.INTERNET)
@@ -68,17 +67,30 @@ public class Winlytics{
      */
     public static void createSurvey(@NonNull String surveyId,@NonNull String userId,@Nullable String userName,
             @Nullable String email,@NonNull String categoryTags , @NonNull Context context,boolean isTest){
+        sharedPreferences = context.getSharedPreferences("io.winlytics.prefs",Context.MODE_PRIVATE);
+        if(!isTest && (sharedPreferences.getLong("io.winlytics.lastcalled",System.currentTimeMillis()  + 86400000L) < System.currentTimeMillis())){
+            return;
+        }
+        else{
+            sharedPreferences.edit().putLong("io.winlytics.lastcalled",System.currentTimeMillis()).apply();
+        }
         SURVEYID = surveyId;
         USERID  = userId;
         USERNAME = (userName == null) ? "" : userName;
         EMAIL = (email == null) ? "" : email;
         WINLYTICS_CATEGORY_TAG = categoryTags;
         isTesting = isTest;
-        sharedPreferences = context.getSharedPreferences("io.winlytics.prefs",Context.MODE_PRIVATE);
         String temp = sharedPreferences.getString("io.winlytics.uniquecookieid",null);
         UNIQUE_COOKIE_ID = (temp == null) ? "" : temp;
         if(winlytics == null){
-            winlytics = new Winlytics();
+            if(!mutex.getAndSet(true)){
+                requestCount++;
+                winlytics = new Winlytics();
+                new SetWinlyticsSurvey().execute();
+            }
+            else{
+                throw new WinlyticsException("Winlytics should be called once per instance");
+            }
         }
         else{
             if(mutex.get()){
@@ -86,7 +98,8 @@ public class Winlytics{
             }
             else{
                 if(survey == null){
-                    winlytics.loadSurvey();
+                    requestCount++;
+                    new SetWinlyticsSurvey().execute();
                 }
             }
         }
@@ -95,7 +108,9 @@ public class Winlytics{
                 @Override
                 public void notifyAdapterIsReady() {
                     winlytics.UIReady = true;
-                    winlytics.setSurveyItems();
+                    if(isSuccessfulResult){
+                        winlytics.setSurveyItems();
+                    }
                 }
             },context);
         }
@@ -124,28 +139,39 @@ public class Winlytics{
             case OK:
                 break;
             case UNKNOWN_ERROR:
-                //Report StackTrace to API
+                isSuccessfulResult = false;
+                //TODO Currently not implemented
                 break;
             case SERVICE_UNAVAILABLE:
-                new Handler().postDelayed(new Runnable() {
+                isSuccessfulResult = false;
+                new Timer().schedule(new TimerTask() {
                     @Override
                     public void run() {
-                       new SetWinlyticsSurvey().execute();
+                        if(isAppOnScreen && requestCount < 3) {
+                            requestCount++;
+                            new SetWinlyticsSurvey().execute();
+                        }
                     }
-                },500);
+                }, 10000);
                 break;
             case MALFORMED_RESPONSE:
-                new Handler().postDelayed(new Runnable() {
+                isSuccessfulResult = false;
+                new Timer().schedule(new TimerTask() {
                     @Override
                     public void run() {
-                        new SetWinlyticsSurvey().execute();
+                        if(isAppOnScreen && requestCount < 3) {
+                            requestCount++;
+                            new SetWinlyticsSurvey().execute();
+                        }
                     }
-                },500);
+                }, 500);
                 break;
             case PROTOCOL_ERROR:
+                isSuccessfulResult = false;
                 //Open an issue
                 break;
             case SETUP_ERROR:
+                //TODO Currently not implemented
                 throw new WinlyticsException("Authenication failed,information which passed is wrong");
         }
     }
@@ -222,10 +248,20 @@ public class Winlytics{
      * Async task class to get data by making HTTP call
      */
     private static class SetWinlyticsSurvey extends AsyncTask<Void, Void, Void> {
+
+        SetWinlyticsSurvey(){
+            super();
+        }
+
         @Override
         protected Void doInBackground(Void... arg0) {
             winlytics.loadSurvey();
             try {
+                if(winlytics.response == null){
+                    isSuccessfulResult = false;
+                    return null;
+                }
+                isSuccessfulResult = true;
                 JSONObject jsonObj = new JSONObject(winlytics.response);
                 // Example Json Parsing
                 if(survey == null){
@@ -259,7 +295,17 @@ public class Winlytics{
         @Override
         protected void onPostExecute(Void aVoid) {
             mutex.set(false);
-            winlytics.setSurveyItems();
+            if(isSuccessfulResult){
+                winlytics.setSurveyItems();
+            }
         }
+    }
+
+    public static void onResume(){
+        isAppOnScreen = true;
+    }
+
+    public static void onPause(){
+        isAppOnScreen = false;
     }
 }

@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="#f4f3f3" android:layout_width="match_parent"
     android:layout_height="wrap_content">
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:id="@+id/winlytics_thankyou_cancel"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:src="@drawable/winlytics_cancel_button"
+        android:layout_height="40dp" />
     <ImageView
         android:layout_width="match_parent"
-        android:background="#f4f3f3"
         android:id="@+id/winlytics_thankyou_image"
-        android:layout_height="60dp" />
+        android:layout_height="100dp" />
     <TextView
         android:layout_width="match_parent"
         android:textColor="@color/black"
         android:textStyle="bold"
-        android:padding="15dp"
+        android:layout_marginTop="80dp"
+        android:padding="5dp"
         android:textSize="20sp"
-        android:background="#f4f3f3"
         android:gravity="center_horizontal"
         android:id="@+id/winlytics_thankyou_simple"
         android:layout_height="wrap_content" />
@@ -21,18 +29,18 @@
         android:layout_width="match_parent"
         android:textColor="@color/black"
         android:textSize="14sp"
-        android:padding="15dp"
+        android:layout_marginTop="115dp"
+        android:padding="10dp"
         android:gravity="center"
-        android:background="#f4f3f3"
         android:id="@+id/winlytics_thankyou_detailed"
         android:layout_height="wrap_content" />
     <TextView
         android:layout_width="match_parent"
         android:gravity="center"
         android:textSize="12sp"
+        android:background="#ffffff"
+        android:layout_marginTop="160dp"
         android:id="@+id/winlytics_thankyou_poweredby"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
         android:text="Powered by Winlytics"
         android:layout_height="30dp" />
-</LinearLayout>
+</RelativeLayout>

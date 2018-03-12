@@ -11,9 +11,11 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.v4.content.res.ResourcesCompat;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -60,8 +62,10 @@ class WinlyticsAdapter extends Dialog{
     private int selectionColor;
     private GradientDrawable solidDrawable = new GradientDrawable();
     private GradientDrawable withBorderDrawable = new GradientDrawable();
-    private static boolean isFromSubmit = false;
     private SharedPreferences sharedPreferences;
+    private int requestCount = 0;
+    private String resultText = "";
+    private boolean isFromSubmit = false;
 
     interface WinlyticsAdapterNotifier{
         void notifyAdapterIsReady();
@@ -99,6 +103,18 @@ class WinlyticsAdapter extends Dialog{
 
         //Set Button UnHappy Listener
 
+        winlytics_optional_edit_text_area.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    isFromSubmit = true;
+                    submitResult();
+                    return true;
+                }
+                return false;
+            }
+        });
+
         View.OnClickListener buttonSad = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,8 +139,7 @@ class WinlyticsAdapter extends Dialog{
                 String temp = whyDidYouChoose.replace("%number%",resultNumber);
                 concatenatedFeedback = temp + " " + weWillUseYourFeedback;
                 winlytics_optional_text_title_area.setText(concatenatedFeedback);
-                isFromSubmit = false;
-                //Send result
+                submitResult();
             }
         };
 
@@ -155,7 +170,7 @@ class WinlyticsAdapter extends Dialog{
                 concatenatedFeedback = temp + " " + weWillUseYourFeedback;
                 winlytics_optional_text_title_area.setText(concatenatedFeedback);
                 isFromSubmit = false;
-                //Send result
+                submitResult();
             }
         };
 
@@ -176,11 +191,8 @@ class WinlyticsAdapter extends Dialog{
         winlytics_submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String resultText = winlytics_optional_edit_text_area.getText().toString();
                 isFromSubmit = true;
-                String temp = WINLYTICS_SUBMIT_URL.replace("{submitToken}",submitToken);
-                new SendResult(resultNumber,temp,resultText,Winlytics.WINLYTICS_CATEGORY_TAG,isFromSubmit).execute();
-                dialog.dismiss();
+                submitResult();
             }
         });
         winlytics_cancel_action.setOnClickListener(new View.OnClickListener() {
@@ -246,6 +258,18 @@ class WinlyticsAdapter extends Dialog{
         return dp * context.getResources().getDisplayMetrics().density;
     }
 
+    private void submitResult(){
+        if(resultText.length() == 0){
+            resultText = winlytics_optional_edit_text_area.getText().toString();
+        }
+        String temp = WINLYTICS_SUBMIT_URL.replace("{submitToken}",submitToken);
+        requestCount++;
+        new SendResult(resultNumber,temp,resultText,Winlytics.WINLYTICS_CATEGORY_TAG,isFromSubmit).execute();
+        if(dialog.isShowing() && isFromSubmit){
+            dialog.dismiss();
+        }
+    }
+
     @SuppressLint("StaticFieldLeak")
     //This should run no matter application lives or not to send results correctly
     private class SendResult extends AsyncTask<Void,Void,Void>{
@@ -263,7 +287,9 @@ class WinlyticsAdapter extends Dialog{
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            new WinlyticsBottomDialog(context);
+            if(fromSubmit){
+                new WinlyticsBottomDialog(context);
+            }
         }
 
         @Override
@@ -325,14 +351,32 @@ class WinlyticsAdapter extends Dialog{
                 //Report StackTrace to API
                 break;
             case SERVICE_UNAVAILABLE:
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if(Winlytics.isAppOnScreen && requestCount < 3 && isFromSubmit) {
+                            requestCount++;
+                            submitResult();
+                        }
+                    }
+                }, 10000);
                 break;
             case PROTOCOL_ERROR:
                 //Open an issue
                 break;
             case MALFORMED_RESPONSE:
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if(Winlytics.isAppOnScreen && requestCount < 3 && isFromSubmit) {
+                            requestCount++;
+                            submitResult();
+                        }
+                    }
+                }, 500);
                 break;
             case AUTHENICATION_ERROR:
-                //Open an issue
+                //Token expired
                 break;
             case SETUP_ERROR:
                 throw new WinlyticsException("Authenication failed,information which passed is wrong");
@@ -373,6 +417,7 @@ class WinlyticsAdapter extends Dialog{
 
         private TextView winlytics_thankyou_simple,winlytics_thankyou_detailed;
         private ImageView winlytics_thankyou_image;
+        private ImageButton winlytics_thankyou_cancel;
 
         WinlyticsBottomDialog(Context context){
             super(context);
@@ -382,6 +427,7 @@ class WinlyticsAdapter extends Dialog{
             winlytics_thankyou_simple = (TextView) findViewById(R.id.winlytics_thankyou_simple);
             winlytics_thankyou_detailed = (TextView) findViewById(R.id.winlytics_thankyou_detailed);
             winlytics_thankyou_image = (ImageView) findViewById(R.id.winlytics_thankyou_image);
+            winlytics_thankyou_cancel = (ImageButton) findViewById(R.id.winlytics_thankyou_cancel);
             if(Integer.parseInt(resultNumber) > 6){
                 winlytics_thankyou_simple.setText(thanksAgain);
                 winlytics_thankyou_image.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(),R.drawable.happyheart,null));
@@ -390,16 +436,28 @@ class WinlyticsAdapter extends Dialog{
                 winlytics_thankyou_simple.setText(thankYou);
                 winlytics_thankyou_image.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(),R.drawable.sadheart,null));
             }
+            winlytics_thankyou_cancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(isShowing()){
+                        dismiss();
+                    }
+                }
+            });
             winlytics_thankyou_image.setColorFilter(selectionColor);
             winlytics_thankyou_detailed.setText(weReallyAppreciateYourFeedback);
-            show();
-            final Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                public void run() {
-                    dismiss();
-                    timer.cancel(); //this will cancel the timer of the system
-                }
-            }, 1500);
+            if(Winlytics.isAppOnScreen){
+                show();
+                final Timer timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    public void run() {
+                       if(isShowing()){
+                           dismiss();
+                       }
+                        timer.cancel(); //this will cancel the timer of the system
+                    }
+                }, 2500);
+            }
         }
     }
 }
