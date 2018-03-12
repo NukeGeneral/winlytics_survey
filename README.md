@@ -2,15 +2,13 @@
 <img src="http://winlytics.io/assets/images/logo.png">
 </p>
 
+<h2 align="center">Winlytics Android Gradle Library</h2>
 
-<h1 align="center">Winlytics Android Gradle Library</h1>
-
-
-## How to install this library
+### How to install this library
 
 Add this snippet to your project level gradle:
 
-```javascript
+```gradle
   allprojects {
         repositories {
             maven { url "https://jitpack.io" }
@@ -19,28 +17,28 @@ Add this snippet to your project level gradle:
 ```
 
 And this line to your app level gradle:
-```javascript
+```gradle
   compile 'com.github.panjur:winlytics_survey:0.2.1-beta'
 ```
 And to your AndroidManifest.xml file:
-```javascript
+```xml
   <uses-permission android:name="android.permission.INTERNET"></uses-permission>
 ```
 
-## How to use this library
+### How to use this library
 
 In your calling activity or fragment: 
 
 Override onResume and onPause method like example 
 
-```javascript
+```java
     @Override
     protected void onResume() {
         super.onResume();
         Winlytics.onResume();
     }
 ```
-```javascript
+```java
     @Override
     protected void onPause() {
         super.onPause();
@@ -60,7 +58,7 @@ Required Parameters
      @param context This is activity or fragment context
      @param isTest is this a test request or not(default false)
 
-```javascript
+```java
   Winlytics.createSurvey(/*surveyId*/,/*userId*/,/*userName*/,/*email*/,/*categoryTags*/,/*context*/,/*isTest*/);
 ```
 
