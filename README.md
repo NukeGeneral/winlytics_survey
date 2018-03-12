@@ -14,7 +14,7 @@ Add this snippet to your project level gradle:
 
 And this line to your app level gradle:
 ```javascript
-  implementation 'io.winlytics.survey:1.0.0'
+  compile 'com.github.panjur:winlytics_survey:FINAL RELEASE'
 ```
 And to your AndroidManifest.xml file:
 ```javascript
@@ -23,15 +23,36 @@ And to your AndroidManifest.xml file:
 
 ## How to use this library
 
-Just call in your activity or fragment,it will show a Dialog easily.
-Context can be Activity or Fragment context
+Override onResume and onPause method like example
+
 ```javascript
-  Winlytics.createSurvey(/*Winlytics authencation token*/,
-  /* Survey ID */,
-  /*User id or some unique identifier*/,
-  /*User name or empty string if not defined*/,
-  /*E-mail or empty string if not defined*/,
-  /*An activity or fragment name*/,
-  /*Activity or fragment context*/);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Winlytics.onResume();
+    }
+```
+```javascript
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Winlytics.onPause();
+    }
+```
+
+And call method below in your activity or fragment,it will show a Dialog easily.
+
+Required Parameters
+
+     @param surveyId Winlytics survey ID provided in registration
+     @param userId To identify users from each other(It should be unique for each user)
+     @param userName Optional parameter to see user name in dashboard,it can be empty string
+     @param email Optional parameter to see emails in dashboard,it can be empty string
+     @param categoryTags This makes easier to analyse dashboard,it's like filter or activity/fragment name
+     @param context This is activity or fragment context
+     @param isTest is this a test request or not(default false)
+
+```javascript
+  Winlytics.createSurvey(/*surveyId*/,/*userId*/,/*userName*/,/*email*/,/*categoryTags*/,/*context*/,/*isTest*/);
 ```
 
