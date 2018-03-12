@@ -14,7 +14,7 @@ Add this snippet to your project level gradle:
 
 And this line to your app level gradle:
 ```javascript
-  compile 'com.github.panjur:winlytics_survey:0.2-beta'
+  compile 'com.github.panjur:winlytics_survey:0.2.1-beta'
 ```
 And to your AndroidManifest.xml file:
 ```javascript
