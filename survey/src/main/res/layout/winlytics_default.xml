@@ -207,6 +207,7 @@
                 android:layout_marginBottom="20dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
+                android:background="@drawable/simple_border"
                 style="@style/Widget.AppCompat.Button.Borderless"
                 android:id="@+id/winlytics_optional_edit_text_area"
                 android:layout_height="150dp" />

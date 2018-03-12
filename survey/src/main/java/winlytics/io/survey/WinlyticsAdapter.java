@@ -3,7 +3,6 @@ package winlytics.io.survey;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
@@ -12,10 +11,12 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.v4.content.res.ResourcesCompat;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -62,15 +63,16 @@ class WinlyticsAdapter extends Dialog{
     private int selectionColor;
     private GradientDrawable solidDrawable = new GradientDrawable();
     private GradientDrawable withBorderDrawable = new GradientDrawable();
-    private SharedPreferences sharedPreferences;
     private int requestCount = 0;
     private String resultText = "";
     private boolean isFromSubmit = false;
+    private boolean isEdittextRequestFocus = false;
 
     interface WinlyticsAdapterNotifier{
         void notifyAdapterIsReady();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     WinlyticsAdapter(final WinlyticsAdapterNotifier mListener, final Context context){
         super(context);
         dialog = new Dialog(context,R.style.DialogTheme);
@@ -112,6 +114,38 @@ class WinlyticsAdapter extends Dialog{
                     return true;
                 }
                 return false;
+            }
+        });
+
+        winlytics_optional_edit_text_area.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN){
+                    isEdittextRequestFocus = true;
+                    return true;
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP && isEdittextRequestFocus){
+                    //Call my onClick method
+                    isEdittextRequestFocus = false;
+                    winlytics_optional_edit_text_area.requestFocus();
+                    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT,0);
+                    new Timer().schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            winlytics_scroll.smoothScrollTo(0,powered_by_text.getBottom());
+                        }
+                    },300);
+                    return true;
+                }
+                else{
+                    if(winlytics_optional_edit_text_area.hasFocus()){
+                        InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                        winlytics_optional_edit_text_area.clearFocus();
+                    }
+                    return event.getAction() == MotionEvent.ACTION_MOVE;
+                }
             }
         });
 
@@ -250,7 +284,6 @@ class WinlyticsAdapter extends Dialog{
         button9.setBackground(solidDrawable);
         button10.setBackground(solidDrawable);
 
-        winlytics_optional_edit_text_area.setBackground(solidDrawable);
         winlytics_submit.setBackground(withBorderDrawable);
     }
 
