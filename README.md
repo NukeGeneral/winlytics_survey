@@ -1,4 +1,10 @@
-# Winlytics Android Gradle Library
+<p align="center"> 
+<img src="http://winlytics.io/assets/images/logo.png">
+</p>
+
+
+<h1 align="center">Winlytics Android Gradle Library</h1>
+
 
 ## How to install this library
 
