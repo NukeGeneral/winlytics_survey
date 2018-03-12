@@ -23,7 +23,9 @@ And to your AndroidManifest.xml file:
 
 ## How to use this library
 
-Override onResume and onPause method like example
+In your calling activity or fragment: 
+
+Override onResume and onPause method like example 
 
 ```javascript
     @Override
@@ -40,7 +42,7 @@ Override onResume and onPause method like example
     }
 ```
 
-And call method below in your activity or fragment,it will show a Dialog easily.
+And call method below,it will show a Dialog easily.
 
 Required Parameters
 
