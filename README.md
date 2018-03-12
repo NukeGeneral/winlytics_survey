@@ -2,7 +2,7 @@
 <img src="http://winlytics.io/assets/images/logo.png">
 </p>
 
-<h2 align="center">Winlytics Android Gradle Library</h2>
+<h2 align="center">Winlytics.io Android Gradle Library</h2>
 
 ### How to install this library
 
